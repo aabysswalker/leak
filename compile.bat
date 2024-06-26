@@ -1,2 +1,2 @@
-call dxc.exe -E ModelVsMain -Fo ModelVsMain.shader -T vs_6_0 -Zi -Zpc -Qembed_debug shaders/main.hlsl
-call dxc.exe -E ModelPsMain -Fo ModelPsMain.shader -T ps_6_0 -Zi -Zpc -Qembed_debug shaders/main.hlsl
+call dxc.exe -E ModelVsMain -Fo shaders/ModelVsMain.shader -T vs_6_0 -Zi -Zpc -Qembed_debug shaders/main.hlsl
+call dxc.exe -E ModelPsMain -Fo shaders/ModelPsMain.shader -T ps_6_0 -Zi -Zpc -Qembed_debug shaders/main.hlsl

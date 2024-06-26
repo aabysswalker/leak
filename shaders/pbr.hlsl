@@ -1,5 +1,3 @@
-#include "common.hlsl"
-
 float DistributionGGX(float3 N, float3 H, float roughness)
 {
     float a = roughness * roughness;
@@ -7,11 +5,10 @@ float DistributionGGX(float3 N, float3 H, float roughness)
     float NdotH = max(dot(N, H), 0.0);
     float NdotH2 = NdotH * NdotH;
 
-    float nom = a2;
     float denom = (NdotH2 * (a2 - 1.0) + 1.0);
     denom = 3.14159265359 * denom * denom;
 
-    return nom / denom;
+    return a2 / max(denom, 0.001);
 }
 
 float GeometrySchlickGGX(float NdotV, float roughness)
@@ -37,29 +34,26 @@ float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
 
 float3 fresnelSchlick(float cosTheta, float3 F0)
 {
-    return F0 + (1.0 - F0) * pow(saturate(1.0 - cosTheta), 5.0);
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-float4 EvaluatePBR(ps_input Input, point_light PointLight)
+float4 EvaluatePBR(ps_input Input, point_light PointLight, float3 Color, float3 Normal, float3 MR)
 {
+    PointLight.Pos.z += .2;
     float3 light_position = PointLight.Pos;
     
-    Input.Normal.x = -Input.Normal.x;
-    Input.Normal.z = -Input.Normal.z;
-    float3 N = normalize(Input.Normal);
-
+    float3 N = normalize(Normal);
     float3 V = normalize(DirLightUniforms.CameraPos - Input.WorldPos);
 
-    float3 albedo = float3(1, 0.1, 0.1);
-    float metallic = 0.01;
-    float roughness = 0.02;
+    float3 albedo = Color;
+    float metallic = MR.b;
+    float roughness = MR.g;
     float ao = 1.0;
 
-    
     float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metallic);
 
     float3 Lo = float3(0.0, 0.0, 0.0);
-    
+
     float3 L = normalize(light_position - Input.WorldPos);
     float3 H = normalize(V + L);
     float distance = length(light_position - Input.WorldPos);
@@ -68,7 +62,7 @@ float4 EvaluatePBR(ps_input Input, point_light PointLight)
 
     float NDF = DistributionGGX(N, H, roughness);
     float G = GeometrySmith(N, V, L, roughness);
-    float3 F = fresnelSchlick(saturate(dot(H, V)), F0);
+    float3 F = fresnelSchlick(clamp(dot(H, V), 0.0, 1.0), F0);
 
     float3 numerator = NDF * G * F;
     float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
@@ -81,12 +75,9 @@ float4 EvaluatePBR(ps_input Input, point_light PointLight)
     float NdotL = max(dot(N, L), 0.0);
 
     Lo += (kD * albedo / 3.14159265359 + specular) * radiance * NdotL;
-    
-    float3 ambient = float3(0.03, 0.03, 0.03) * albedo * ao;
+
+    float3 ambient = float3(0.2, 0.2, 0.2) * albedo * ao;
     float3 color = ambient + Lo;
-
-    color = color / (color + float3(1.0, 1.0, 1.0));
-    color = pow(color, float3(.45, .45, .45));
-
+    
     return float4(color, 1.0);
 }

@@ -16,9 +16,11 @@
 #pragma pack(push, 1)
 struct vertex
 {
-    v3 Pos;
-    v2 Uv;
-    v3 Normal;
+    dxm::XMFLOAT3 Pos;
+    dxm::XMFLOAT2 Uv;
+    dxm::XMFLOAT3 Normal;
+    dxm::XMFLOAT3 Tangent;
+    dxm::XMFLOAT3 BiTangent;
 };
 
 struct texel_rgba8
@@ -32,9 +34,9 @@ struct texel_rgba8
 
 struct texture
 {
-    int Width;
-    int Height;
-    int* Texels;
+    i32 Width;
+    i32 Height;
+    u32* Texels;
 
     ID3D12Resource* GpuTexture;
     D3D12_GPU_DESCRIPTOR_HANDLE GpuDescriptor;
@@ -42,31 +44,33 @@ struct texture
 
 struct mesh
 {
-    int IndexOffset;
-    int IndexCount;
-    int VertexOffset;
-    int VertexCount;
-    int TextureId;
+    u32 IndexOffset;
+    u32 IndexCount;
+    u32 VertexOffset;
+    u32 VertexCount;
+    u32 TextureId;
 };
 
 struct model
 {
-    int NumMeshes;
+    u32 NumMeshes;
     mesh* MeshArray;
 
-    int NumTextures;
-    texture* TextureArray;
-    
-    int VertexCount;
+    u32 NumTextures;
+    texture* ColorTextureArray;
+    texture* NormalTextureArray;
+    texture* MRTextureArray;
+
+    u32 VertexCount;
     vertex* VertexArray;
-    int IndexCount;
-    int* IndexArray;
+    u32 IndexCount;
+    u32* IndexArray;
 
     ID3D12Resource* GpuVertexBuffer;
     ID3D12Resource* GpuIndexBuffer;
 
-    ID3D12Resource* TransformBuffer;
-    D3D12_GPU_DESCRIPTOR_HANDLE TransformDescriptor;
+    dxm::XMMATRIX transform;
+    bool is_pbr;
 };
 
 #define ASSETS_H
